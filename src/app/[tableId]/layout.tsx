@@ -8,9 +8,9 @@ export default async function Layout({
   return (
     <HydrateClient>
       <main>
-        <div className="p-4 shadow-sm">
+        <header className="sticky top-0 p-4 shadow-sm">
           <h1 className="text-2xl font-semibold"> {base.name}</h1>
-        </div>
+        </header>
 
         {children}
       </main>

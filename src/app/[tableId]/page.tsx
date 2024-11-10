@@ -17,7 +17,7 @@ export default async function TablePage({
   const rows = await api.table.getRows(tableId);
 
   return (
-    <div className="p-2">
+    <div>
       <BaseTable columns={columns} rows={rows} />
     </div>
   );
