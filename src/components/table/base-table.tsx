@@ -5,6 +5,7 @@ import {
   flexRender,
   getCoreRowModel,
   type RowData,
+  type Row as TanstackRow,
   useReactTable,
 } from "@tanstack/react-table";
 import { type Column } from "@prisma/client";
@@ -197,25 +198,44 @@ export const BaseTable = ({
 
         <TableBody
           style={{
+            width: table.getTotalSize() * 2,
             height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
+            position: "relative", //needed for absolute positioning of rows
           }}
         >
           {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row, index) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                <TableCell className="border bg-slate-100 p-2 font-semibold text-slate-400">
-                  {index + 1}
-                </TableCell>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="border py-0">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
+              const row = tableRows[virtualRow.index]!;
+
+              return (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  style={
+                    {
+                      // position: "absolute",
+                      // top: 0,
+                      // left: 0,
+                      // width: "100%",
+                      // height: `${virtualRow.size}px`,
+                      // transform: `translateY(${virtualRow.start}px)`,
+                    }
+                  }
+                >
+                  <TableCell className="border bg-slate-100 p-2 font-semibold text-slate-400">
+                    {index + 1}
                   </TableCell>
-                ))}
-              </TableRow>
-            ))
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="border py-0">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">

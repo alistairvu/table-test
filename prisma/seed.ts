@@ -42,7 +42,7 @@ async function main() {
   const ageId = columns.find((x) => x.name === "Age")?.id;
 
   // Generate the 100k rows
-  const limit = 100;
+  const limit = 10000;
   console.log("Generating data...");
   const data = Array.from(Array(limit).keys()).map((_, index) => ({
     tableId: table.id,
