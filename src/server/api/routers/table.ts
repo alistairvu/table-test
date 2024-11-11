@@ -15,4 +15,31 @@ export const tableRouter = createTRPCRouter({
       const controller = new TableController(ctx.db);
       return controller.getColumns(input);
     }),
+
+  editTextCell: publicProcedure
+    .input(
+      z.object({
+        cellId: z.string(),
+        value: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const controller = new TableController(ctx.db);
+      const { cellId, value } = input;
+      return controller.editTextCell(cellId, value);
+    }),
+
+  editIntCell: publicProcedure
+    .input(
+      z.object({
+        cellId: z.string(),
+        value: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const controller = new TableController(ctx.db);
+      const { cellId, value } = input;
+      console.log({ input });
+      return controller.editIntCell(cellId, value);
+    }),
 });

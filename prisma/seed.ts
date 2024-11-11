@@ -46,18 +46,39 @@ async function main() {
   console.log("Generating data...");
   const data = Array.from(Array(limit).keys()).map((_, index) => ({
     tableId: table.id,
-    rowData: {
-      [nameId ?? "name"]: faker.person.fullName(),
-      [ageId ?? "age"]: Math.floor(Math.random() * 100),
-    } as Prisma.JsonObject,
     index,
   }));
 
   // Adding the 100k rows
-  await prisma.row.createManyAndReturn({
+  const rows = await prisma.row.createManyAndReturn({
     data,
   });
   console.log(`Added ${limit} rows`);
+
+  const rowIds = rows.map((x) => x.id);
+
+  const nameColumns = rowIds.map((rowId) => ({
+    columnId: `${nameId}`,
+    rowId,
+    textValue: faker.person.fullName(),
+  }));
+
+  const ageColumns = rowIds
+    .map((rowId) => ({
+      rowId,
+      age: Math.round(Math.random() * 100),
+    }))
+    .map(({ rowId, age }) => ({
+      columnId: `${ageId}`,
+      rowId,
+      intValue: age,
+      textValue: `${age}`,
+    }));
+
+  await prisma.cell.createMany({
+    data: [...nameColumns, ...ageColumns],
+  });
+  console.log(`Filled ${limit} rows`);
 }
 
 main()

@@ -22,9 +22,36 @@ export class TableController {
       where: {
         tableId,
       },
+      include: {
+        cells: true,
+      },
       // orderBy: {
       //   index: "asc",
       // },
+    });
+  }
+
+  async editTextCell(cellId: string, value: string) {
+    return this.db.cell.update({
+      where: {
+        id: cellId,
+      },
+      data: {
+        textValue: value,
+        intValue: null,
+      },
+    });
+  }
+
+  async editIntCell(cellId: string, value: number) {
+    return this.db.cell.update({
+      where: {
+        id: cellId,
+      },
+      data: {
+        textValue: String(value),
+        intValue: value,
+      },
     });
   }
 }

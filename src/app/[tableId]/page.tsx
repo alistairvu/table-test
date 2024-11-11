@@ -18,7 +18,11 @@ export default async function TablePage({
 
   return (
     <div>
-      <BaseTable columns={columns} rows={rows} />
+      <BaseTable
+        tableId={tableId}
+        initialColumns={columns}
+        initialRows={rows}
+      />
     </div>
   );
 }
