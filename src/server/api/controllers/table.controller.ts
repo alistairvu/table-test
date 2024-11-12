@@ -6,6 +6,22 @@ import { type PrismaClient } from "@prisma/client";
 export class TableController {
   constructor(private db: PrismaClient) {}
 
+  async countRows(tableId: string) {
+    const rows = await this.db.row.findMany({
+      where: {
+        tableId,
+      },
+      distinct: ["index"],
+      select: {
+        index: true,
+      },
+    });
+
+    return {
+      count: rows.length,
+    };
+  }
+
   async getColumns(tableId: string) {
     return this.db.column.findMany({
       where: {
@@ -25,10 +41,30 @@ export class TableController {
       include: {
         cells: true,
       },
-      // orderBy: {
-      //   index: "asc",
-      // },
+      orderBy: {
+        index: "asc",
+      },
     });
+  }
+
+  async getInfiniteRows(tableId: string, cursor: number, limit: number) {
+    const items = await this.db.row.findMany({
+      take: limit,
+      skip: cursor,
+      where: {
+        tableId,
+      },
+      include: {
+        cells: true,
+      },
+      orderBy: {
+        index: "asc",
+      },
+    });
+
+    const nextCursor = cursor + items.length;
+
+    return { items, nextCursor };
   }
 
   async editTextCell(cellId: string, value: string) {

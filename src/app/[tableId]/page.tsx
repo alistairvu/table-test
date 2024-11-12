@@ -14,15 +14,9 @@ export default async function TablePage({
 
   const columns = await api.table.getColumns(tableId);
 
-  const rows = await api.table.getRows(tableId);
+  const { count: rowCount } = await api.table.countRows(tableId);
 
   return (
-    <div>
-      <BaseTable
-        tableId={tableId}
-        initialColumns={columns}
-        initialRows={rows}
-      />
-    </div>
+    <BaseTable tableId={tableId} initialColumns={columns} rowCount={rowCount} />
   );
 }

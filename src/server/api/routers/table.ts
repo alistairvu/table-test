@@ -3,11 +3,33 @@ import { z } from "zod";
 import { TableController } from "../controllers/table.controller";
 
 export const tableRouter = createTRPCRouter({
+  countRows: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
+    const controller = new TableController(ctx.db);
+    return controller.countRows(input);
+  }),
+
   getRows: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
     const controller = new TableController(ctx.db);
     const rows = await controller.getRows(input);
     return rows;
   }),
+
+  getInfiniteRows: publicProcedure
+    .input(
+      z.object({
+        tableId: z.string(),
+        cursor: z.number().nullish(),
+        limit: z.number().nullish(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const controller = new TableController(ctx.db);
+
+      const limit = input.limit ?? 1000;
+      const cursor = input.cursor ?? 0;
+
+      return controller.getInfiniteRows(input.tableId, cursor, limit);
+    }),
 
   getColumns: publicProcedure
     .input(z.string())

@@ -22,13 +22,14 @@ import { BaseTableCell } from "./base-table-cell";
 import { api } from "~/trpc/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getQueryKey } from "@trpc/react-query";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useInView } from "react-intersection-observer";
 
 type BaseTableProps = {
   tableId: string;
   initialColumns: Column[];
-  initialRows: RowWithCells[];
+  rowCount: number;
 };
 
 declare module "@tanstack/react-table" {
@@ -47,7 +48,7 @@ declare module "@tanstack/react-table" {
 export const BaseTable = ({
   tableId,
   initialColumns,
-  initialRows,
+  rowCount,
 }: BaseTableProps) => {
   // Query client
   const queryClient = useQueryClient();
@@ -57,9 +58,15 @@ export const BaseTable = ({
     initialData: initialColumns,
   });
 
-  const { data: rows } = api.table.getRows.useQuery(tableId, {
-    initialData: initialRows,
-  });
+  const { data: infiniteRows, fetchNextPage } =
+    api.table.getInfiniteRows.useInfiniteQuery(
+      { tableId, limit: 1000 },
+      { getNextPageParam: (lastPage) => lastPage.nextCursor },
+    );
+
+  const rows = infiniteRows?.pages?.flatMap((page) => page.items) ?? [];
+  const totalDBRowCount = rowCount;
+  const totalFetched = rows.length;
 
   // SECTION: Mutations for editing a text cell
   const editTextCell = api.table.editTextCell.useMutation({
@@ -150,7 +157,7 @@ export const BaseTable = ({
 
   const rowVirtualizer = useVirtualizer({
     count: tableRows.length,
-    estimateSize: () => 50,
+    estimateSize: () => 20,
     getScrollElement: () => tableContainerRef.current,
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
@@ -160,12 +167,20 @@ export const BaseTable = ({
     overscan: 5,
   });
 
+  // Setting up infinite scroll
+  const { ref: inViewRef, inView } = useInView();
+
+  useEffect(() => {
+    const hasNextPage = totalDBRowCount > totalFetched;
+
+    if (inView && hasNextPage) {
+      void fetchNextPage();
+    }
+  }, [inView, fetchNextPage, totalDBRowCount, totalFetched]);
+
   return (
-    <div className="border">
-      <Table
-        style={{ width: table.getTotalSize() * 2 }}
-        ref={tableContainerRef}
-      >
+    <div ref={tableContainerRef}>
+      <Table style={{ width: table.getTotalSize() * 2 }}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -200,27 +215,17 @@ export const BaseTable = ({
           style={{
             width: table.getTotalSize() * 2,
             height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
-            position: "relative", //needed for absolute positioning of rows
           }}
         >
-          {table.getRowModel().rows?.length ? (
-            rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
-              const row = tableRows[virtualRow.index]!;
+          {rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
+            const row = tableRows[virtualRow.index]!;
 
+            if (index + 20 === totalFetched) {
               return (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  style={
-                    {
-                      // position: "absolute",
-                      // top: 0,
-                      // left: 0,
-                      // width: "100%",
-                      // height: `${virtualRow.size}px`,
-                      // transform: `translateY(${virtualRow.start}px)`,
-                    }
-                  }
+                  ref={inViewRef}
                 >
                   <TableCell className="border bg-slate-100 p-2 font-semibold text-slate-400">
                     {index + 1}
@@ -235,14 +240,24 @@ export const BaseTable = ({
                   ))}
                 </TableRow>
               );
-            })
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
+            }
+
+            return (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                <TableCell className="border bg-slate-100 p-2 font-semibold text-slate-400">
+                  {index + 1}
+                </TableCell>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} className="border py-0">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
