@@ -35,26 +35,4 @@ export class BaseController {
       },
     });
   }
-
-  // /**
-  //  * Handles the creation of a new table in a base.
-  //  *
-  //  * @param baseId The id of the base
-  //  */
-  // async createTable(baseId: number) {
-  //   const tableCounts = await this.db.table.count({
-  //     where: {
-  //       baseId,
-  //     },
-  //   });
-
-  //   return this.db.table.create({
-  //     data: {
-  //       baseId: baseId,
-  //       name: `Table ${tableCounts + 1}`,
-  //       rows: [] as Prisma.JsonArray,
-  //       order: tableCounts + 1,
-  //     },
-  //   });
-  // }
 }

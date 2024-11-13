@@ -1,5 +1,5 @@
 // Generate a base and 100_000 data points
-import { type Prisma, PrismaClient, ColumnType } from "@prisma/client";
+import { PrismaClient, ColumnType } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 
 const prisma = new PrismaClient();
