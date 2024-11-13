@@ -5,7 +5,6 @@ import {
   flexRender,
   getCoreRowModel,
   type RowData,
-  type Row as TanstackRow,
   useReactTable,
 } from "@tanstack/react-table";
 import { type Column } from "@prisma/client";
@@ -223,11 +222,15 @@ export const BaseTable = ({
             if (index + 20 === totalFetched) {
               return (
                 <TableRow
+                  data-index={virtualRow.index} //needed for dynamic row height measurement
+                  ref={(node) => rowVirtualizer.measureElement(node)}
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  ref={inViewRef}
                 >
-                  <TableCell className="border bg-slate-100 p-2 font-semibold text-slate-400">
+                  <TableCell
+                    className="border bg-slate-100 p-2 font-semibold text-slate-400"
+                    ref={inViewRef}
+                  >
                     {index + 1}
                   </TableCell>
                   {row.getVisibleCells().map((cell) => (
@@ -244,6 +247,8 @@ export const BaseTable = ({
 
             return (
               <TableRow
+                data-index={virtualRow.index} //needed for dynamic row height measurement
+                ref={(node) => rowVirtualizer.measureElement(node)}
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
               >
